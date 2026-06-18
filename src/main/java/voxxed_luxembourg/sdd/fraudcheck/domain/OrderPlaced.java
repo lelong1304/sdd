@@ -1,5 +1,6 @@
 package voxxed_luxembourg.sdd.fraudcheck.domain;
 
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -11,7 +12,9 @@ public record OrderPlaced(
         String accountId,
         Money amount,
         String accountCountry,
-        String shippingCountry
+        String shippingCountry,
+        Instant accountCreatedAt,
+        Instant placedAt
 ) {
     public OrderPlaced {
         Objects.requireNonNull(orderId, "orderId must not be null");
@@ -19,5 +22,7 @@ public record OrderPlaced(
         Objects.requireNonNull(amount, "amount must not be null");
         Objects.requireNonNull(accountCountry, "accountCountry must not be null");
         Objects.requireNonNull(shippingCountry, "shippingCountry must not be null");
+        Objects.requireNonNull(accountCreatedAt, "accountCreatedAt must not be null");
+        Objects.requireNonNull(placedAt, "placedAt must not be null");
     }
 }

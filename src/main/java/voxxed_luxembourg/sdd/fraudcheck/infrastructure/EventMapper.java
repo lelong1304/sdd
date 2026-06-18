@@ -19,7 +19,9 @@ final class EventMapper {
                 dto.accountId(),
                 new Money(dto.amount(), dto.currency()),
                 dto.accountCountry(),
-                dto.shippingCountry()
+                dto.shippingCountry(),
+                dto.accountCreatedAt(),
+                dto.placedAt()
         );
     }
 

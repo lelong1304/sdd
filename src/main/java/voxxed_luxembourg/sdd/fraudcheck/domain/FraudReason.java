@@ -5,5 +5,6 @@ package voxxed_luxembourg.sdd.fraudcheck.domain;
  * Extensible — new business rules add new values.
  */
 public enum FraudReason {
-    AMOUNT_ABOVE_THRESHOLD
+    AMOUNT_ABOVE_THRESHOLD,
+    RECENT_ACCOUNT_LOW_AMOUNT
 }

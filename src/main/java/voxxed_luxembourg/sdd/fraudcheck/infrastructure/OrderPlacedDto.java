@@ -1,6 +1,7 @@
 package voxxed_luxembourg.sdd.fraudcheck.infrastructure;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Wire DTO for inbound Kafka messages. Anti-corruption boundary —
@@ -12,5 +13,7 @@ public record OrderPlacedDto(
         BigDecimal amount,
         String currency,
         String accountCountry,
-        String shippingCountry
+        String shippingCountry,
+        Instant accountCreatedAt,
+        Instant placedAt
 ) {}

@@ -31,6 +31,8 @@ This service does NOT decide whether an order is fraudulent — it only decides
 | `amount` | Money | order total (amount + currency) |
 | `accountCountry` | String | ISO country code of the account |
 | `shippingCountry` | String | ISO country code of the delivery address |
+| `accountCreatedAt` | Instant | when the account was created (UTC) |
+| `placedAt` | Instant | when the order was placed (UTC) |
 
 ## Business rules
 
@@ -49,6 +51,21 @@ WHEN the `shippingCountry` differs from the `accountCountry`
 THEN the published `FraudCheckRequested` event carries `crossBorder = true`.
 Otherwise `crossBorder = false`.
 
+### Rule 3 — Recent accounts have a lower threshold
+GIVEN an `OrderPlaced` event
+WHEN `placedAt` minus `accountCreatedAt` is **strictly less than** 24 hours
+AND the `amount` is **strictly greater than** 100 in the order's currency
+THEN publish a `FraudCheckRequested` event with `reason = RECENT_ACCOUNT_LOW_AMOUNT`.
+
+The 100 threshold follows the same per-currency convention as Rule 1 (e.g. 100 EUR,
+100 USD — amounts in different currencies are never converted).
+
+### Rule precedence — when multiple trigger rules match
+Exactly **one** `FraudCheckRequested` event is published per order.
+**Rule 1 takes precedence**: when both Rule 1 and Rule 3 match, `reason` is set
+to `AMOUNT_ABOVE_THRESHOLD`. Rule 2 (cross-border flag) always applies to
+whichever event is emitted.
+
 ## Outbound event: `FraudCheckRequested`
 
 | Field | Type | Notes |
@@ -61,13 +78,29 @@ Otherwise `crossBorder = false`.
 
 ## Acceptance criteria
 
+**Rule 1**
 - An order of exactly 1000 EUR does **not** trigger a fraud check (strictly greater).
 - An order of 1000.01 EUR **does** trigger a fraud check.
 - An order of 1500 USD triggers a fraud check (above the USD threshold of 1000).
 - An order of 500 EUR does not trigger a fraud check.
-- A triggered order shipping to a different country than the account has
-  `crossBorder = true`.
+
+**Rule 2**
+- A triggered order shipping to a different country than the account has `crossBorder = true`.
 - A triggered order shipping to the same country has `crossBorder = false`.
+
+**Rule 3**
+- An order of 101 EUR from an account created 12 hours before `placedAt` triggers
+  a fraud check with `reason = RECENT_ACCOUNT_LOW_AMOUNT`.
+- An order of exactly 100 EUR from a recent account does **not** trigger (strictly greater than 100).
+- An order of 101 EUR from an account created **exactly** 24 hours before `placedAt`
+  does **not** trigger (strictly less than 24h).
+- An order of 101 EUR from an account created 25 hours before `placedAt` does **not** trigger.
+
+**Rule precedence**
+- An order of 1500 EUR from an account created 12 hours before `placedAt` triggers with
+  `reason = AMOUNT_ABOVE_THRESHOLD` (Rule 1 wins over Rule 3).
+
+**General**
 - No fraud check is published for an order that matches no rule.
 
 ## Out of scope (for now)

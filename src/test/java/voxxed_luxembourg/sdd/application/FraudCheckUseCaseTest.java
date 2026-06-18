@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import voxxed_luxembourg.sdd.fraudcheck.application.FraudCheckUseCase;
 import voxxed_luxembourg.sdd.fraudcheck.domain.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class FraudCheckUseCaseTest {
+
+    private static final Instant PLACED_AT   = Instant.parse("2026-06-18T12:00:00Z");
+    private static final Instant OLD_ACCOUNT = PLACED_AT.minusSeconds(48 * 3600);
 
     private final FraudCheckPolicy policy = new FraudCheckPolicy(Map.of(
             "EUR", Money.of("1000", "EUR")
@@ -35,7 +39,8 @@ class FraudCheckUseCaseTest {
     private static OrderPlaced orderOf(String amount, String currency,
                                         String accountCountry, String shippingCountry) {
         return new OrderPlaced("order-1", "account-1",
-                Money.of(amount, currency), accountCountry, shippingCountry);
+                Money.of(amount, currency), accountCountry, shippingCountry,
+                OLD_ACCOUNT, PLACED_AT);
     }
 
     /** In-domain test double — per constitution: no mocking library on the domain. */
@@ -47,3 +52,5 @@ class FraudCheckUseCaseTest {
         }
     }
 }
+
+
